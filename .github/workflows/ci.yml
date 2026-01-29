@@ -28,10 +28,19 @@ jobs:
         run: |
           mkdir -p reports
           set -o pipefail
+          # run tests but keep going so we can collect reports
           pytest -v -m "smoke or integration" \
             --junitxml=reports/junit.xml \
-            --cov=. --cov-report=term --cov-report=xml:reports/coverage.xml
-          rc=$?; echo $rc > reports/pytest_exit_code.txt; exit $rc
+            --cov=. --cov-report=term --cov-report=xml:reports/coverage.xml || true
+          rc=$?
+          # print short snippet of junit to logs (useful if tests fail)
+          if [ -f reports/junit.xml ]; then
+            echo "--- junit xml (start) ---"
+            sed -n '1,300p' reports/junit.xml
+            echo "--- junit xml (end) ---"
+          fi
+          echo $rc > reports/pytest_exit_code.txt
+          exit $rc
 
       - name: Upload test reports
         if: always()
