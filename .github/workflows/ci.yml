@@ -27,11 +27,14 @@ jobs:
       - name: Run smoke + integration tests (with reports)
         run: |
           mkdir -p reports
+          set -o pipefail
           pytest -v -m "smoke or integration" \
             --junitxml=reports/junit.xml \
             --cov=. --cov-report=term --cov-report=xml:reports/coverage.xml
+          rc=$?; echo $rc > reports/pytest_exit_code.txt; exit $rc
 
       - name: Upload test reports
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-reports
